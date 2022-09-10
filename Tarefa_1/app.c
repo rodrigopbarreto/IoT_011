@@ -1,5 +1,30 @@
+// ************************************************************************************************************
+// Disciplina: IoT011                                                                                         *
+// Aluno: Rodrigo Policarpo Barreto                                                                           *
+// Exercicio 1                                                                                                *
+//                                                                                                            *                                                      
+// Projeto pensado da seguinte maneira:                                                                       *
+//                                                                                                            *
+// 1 - A partir do exemplo Demo_4, criei 4 tarefas: 1) Leitura do teclado; 2) LED verde piscando regularmente *
+// 3) LED vermelho acendendo sempre que um numero for digitado 4) LED vermelho ficando aceso. Montei toda a   *
+// estrutura das tasks conforme entendi corretas, mas nao consegui que o sistema funcionasse. Até onde conse  *
+// gui verificar, as tasks foram corretamente criadas. Posso estar enganado mas o que acredito é que haja al  *
+// guma falha no processo de notificacao entre as tarefas.                                                    *
+//                                                                                                            *
+//    Funcionamento proposto e esperado:                                                                      *                                                                      *
+//                                                                                                            *
+//   > LED verde pisca de forma contínua com intervalo de 500ms.                                              *
+//   > LED vermelho pisca por 100ms sempre que for digitado um numero.                                        *
+//   > Sempre que o usuario digitar * o LED vermelho deverá ficar aceso e o verde deverá apagar.              *
+//   > O sistema volta ao funcionamento normal sempre que for digitado +.                                     *
+//                                                                                                            *
+// ************************************************************************************************************
+
+
 #include <stdio.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <termios.h>
 
 /* Kernel includes. */
 #include "FreeRTOS.h"
@@ -10,10 +35,10 @@
 /* Local includes. */
 #include "console.h"
 
-#define TASK1_PRIORITY 0 // Tarefa do LED verde piscando
-#define TASK2_PRIORITY 0 // Tarefa do LED vermelho acendendo sempre que digitar um numero
-#define TASK3_PRIORITY 0 // Tarefa do LED vermelho ficando aceso
-#define TASK4_PRIORITY 1 // Tarefa de leitura do teclado
+#define TASK1_PRIORITY 1 // Tarefa do LED verde piscando
+#define TASK2_PRIORITY 1 // Tarefa do LED vermelho acendendo sempre que digitar um numero
+#define TASK3_PRIORITY 1 // Tarefa do LED vermelho ficando aceso
+#define TASK4_PRIORITY 0 // Tarefa de leitura do teclado
 
 #define BLACK "\033[30m" /* Black */
 #define RED "\033[31m"   /* Red */
@@ -39,7 +64,7 @@ st_led_param_t red = {          // LED vermelho piscando quando se tecla um nume
     13,
     RED,
     100};
-TaskHandle_t greenTask_hdlr, redTask_hdlr, redTask_lit_hldr;    // handlers das tarefas 1, 2 e 3
+TaskHandle_t greenTask_hdlr, redTask_hdlr, redTask_lit_hdlr;    // handlers das tarefas 1, 2 e 3
 
 #include <termios.h>
 
@@ -47,6 +72,7 @@ static void prvTask_getChar(void *pvParameters)
 {
     char key;
     int n;
+    uint32_t notificationValue_getChar;
 
     /* I need to change  the keyboard behavior to
     enable nonblock getchar */
@@ -67,49 +93,49 @@ static void prvTask_getChar(void *pvParameters)
     for (;;)
     {
         int stop = 0;
-        key = getchar();            // Leitura do teclado se for numero pisca o LED vermelho que esta apagado por 100ms
-                                    // Se for '*' LED vermelho acesso e LED verde apagado
-                                    // Se for '+' tudo volta ao normal
+        key = getchar();            // Testa a tecla digitada. Se for numero pisca o LED mermelho por 100ms. O verde continua piscando
+                                    // Se o usuario digitar * o LED verde apaga e o vermelho acende e permanece aceso
+                                    // Se o usuario digitar + o sistema volta a funcionar como antes. Verde piscando e vermelho apagado
 
         switch (key)
         {
         case '1':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
         case '2':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
         case '3':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
         case '4':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
         case '5':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
             case '6':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
             case '7':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
             case '8':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
             case '9':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
             case '0':
-            vTaskResume(redTask_hdlr);
+            xTaskNotify(redTask_hdlr, 1, eSetValueWithOverwrite);
             break;
             case '*':
-            vTaskSuspend(greenTask_hdlr);
-            vTaskResume(redTask_lit_hldr);
+            vTaskNotify(greenTask_hdlr, 0, eSetValueWithOverwrite);
+            vTaskNotify(redTask_hdlr, 0, eSetValueWithOverwrite);
             break;
             case '+':
-            vTaskResume(greenTask_hdlr);
-            vTaskSuspend(redTask_lit_hldr);
+            vTaskSuspend(greenTask_hdlr);
+            vTaskNotify(redTask_lit_hdlr, 0, eSetValueWithOverwrite);
             break;
         }
         if (stop)
@@ -123,38 +149,25 @@ static void prvTask_getChar(void *pvParameters)
     exit(0);
     vTaskDelete(NULL);
 }
-static void prvTask_led_lit(void *pvParameters)         // Task do LED vermelho aceso
-{
-    // pvParameters contains LED params
-    st_led_param_t *led = (st_led_param_t *)pvParameters;
-    portTickType xLastWakeTime = xTaskGetTickCount();
-    for (;;)
-    {
-        // console_print("@");
-        gotoxy(led->pos, 2);
-        printf("%s⬤", RED);
-        fflush(stdout);
-        xTaskNotify(redTask_hdlr, 1UL, eSetValueWithOverwrite);
-
-        // gotoxy(led->pos, 2);
-        // printf("%s ", BLACK);
-        // fflush(stdout);
-        // vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
-        // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
-    }
-
-    vTaskDelete(NULL);
-}
 static void prvTask_led_green(void *pvParameters)         // Task do LED verde piscando
 {
+    uint32_t notificationValue_green
+    
     // pvParameters contains LED params
     st_led_param_t *led = (st_led_param_t *)pvParameters;
     portTickType xLastWakeTime = xTaskGetTickCount();
     for (;;)
     {
-        // console_print("@");
+        if (xTaskNotifyWait(
+                ULONG_MAX,
+                ULONG_MAX,
+                &notificationValue_green,
+                portMAX_DELAY))
+        {
+            if (notificationValue_red == 1)
+            {
         gotoxy(led->pos, 2);
-        printf("%s⬤", GREEN);
+        printf("%s⬤", led->color);
         fflush(stdout);
         vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
         // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
@@ -162,24 +175,64 @@ static void prvTask_led_green(void *pvParameters)         // Task do LED verde p
         gotoxy(led->pos, 2);
         printf("%s ", BLACK);
         fflush(stdout);
-        vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
+        // vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
         // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
-    }
+    }}
 
     vTaskDelete(NULL);
 }
-static void prvTask_led_red(void *pvParameters)         // Task do LED vermelho acendendo ao teclar numero
+static void prvTask_led_red(void *pvParameters)         // Task do LED vermelho acendendo ao teclar um numero
 {
+    uint32_t notificationValue_red
+
+// pvParameters contains LED params
+    st_led_param_t *led = (st_led_param_t *)pvParameters;
+    portTickType xLastWakeTime = xTaskGetTickCount();
+    for (;;)
+    {
+         if (xTaskNotifyWait(
+                ULONG_MAX,
+                ULONG_MAX,
+                &notificationValue_red,
+                portMAX_DELAY))
+        {
+            if (notificationValue_red == 1)
+            {
+        gotoxy(led->pos, 2);
+        printf("%s⬤", led->color);
+        fflush(stdout);
+        vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
+        // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
+
+        gotoxy(led->pos, 2);
+        printf("%s ", BLACK);
+        fflush(stdout);
+        // vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
+        // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
+            }
+     }
+
+    vTaskDelete(NULL);
+}
+static void prvTask_led_lit(void *pvParameters)         // Task do LED vermelho aceso
+{
+    uint32_t notificationValue_lit
     // pvParameters contains LED params
     st_led_param_t *led = (st_led_param_t *)pvParameters;
     portTickType xLastWakeTime = xTaskGetTickCount();
     for (;;)
     {
+         if (xTaskNotifyWait(
+                0,
+                0,
+                &notificationValue_lit,
+                portMAX_DELAY))
+
         // console_print("@");
         gotoxy(led->pos, 2);
-        printf("%s⬤", RED);
+        printf("%s⬤", led->color);
         fflush(stdout);
-        vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
+        vTaskDelay(portMAX_DELAY);
         // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
 
         gotoxy(led->pos, 2);
@@ -191,6 +244,8 @@ static void prvTask_led_red(void *pvParameters)         // Task do LED vermelho 
 
     vTaskDelete(NULL);
 }
+
+
 void app_run(void)
 {
 
@@ -204,8 +259,8 @@ void app_run(void)
     xTaskCreate(prvTask_led_green, "LED_green", configMINIMAL_STACK_SIZE, &green, TASK1_PRIORITY, &greenTask_hdlr);
     xTaskCreate(prvTask_led_red, "LED_red", configMINIMAL_STACK_SIZE, &red, TASK2_PRIORITY, &redTask_hdlr);
     vTaskSuspend(redTask_hdlr);
-    xTaskCreate(prvTask_led_lit, "LED_red", configMINIMAL_STACK_SIZE, &red, TASK3_PRIORITY, &redTask_lit_hldr);
-    vTaskSuspend(redTask_lit_hldr);
+    xTaskCreate(prvTask_led_lit, "LED_red", configMINIMAL_STACK_SIZE, &red, TASK3_PRIORITY, &redTask_lit_hdlr);
+    vTaskSuspend(redTask_lit_hdlr);
     xTaskCreate(prvTask_getChar, "Get_key", configMINIMAL_STACK_SIZE, NULL, TASK4_PRIORITY, NULL);
 
     /* Start the tasks and timer running. */
