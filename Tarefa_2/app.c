@@ -56,16 +56,16 @@ typedef struct
     int period_ms;
 } st_led_param_t;
 
-st_led_param_t green = {        // LED verde piscando por 500ms
+st_led_param_t green = {        // Intervalo do LED verde para ".""
     6,
     GREEN,
     500};
-st_led_param_t red = {          // LED vermelho piscando quando se tecla um numero
-    13,
-    RED,
-    200};
-TaskHandle_t greenTask_hdlr, redTask_hdlr, redTask_lit_hldr;    // handlers das tarefas 1, 2 e 3
-
+// st_led_param_t red = {          // Intervalo do LED verde para "-"
+ //    13,
+ //   RED,
+ //   200};
+TaskHandle_t Tecla_hdlr, MorseLEDTask_hdlr, greenTask_lit_hldr, Frase_hdlr, MorseDecode_hdlr;    // handlers das tarefas 1, 2 e 3
+QueueHandle_t TeclaQueue = NULL, MorseQueue = NULL, LEDQueue = NULL; // Declaracao dos handlers das queues
 #include <termios.h>
 
 static void prvTask_getChar(void *pvParameters)
@@ -213,8 +213,7 @@ static void prvTask_getChar(void *pvParameters)
     sprintf(9, "----.");
     sprintf(0, "-----");
     
-    /* Adiciona a tecla digitada ao conjunto da queue para ser tratada posteriormente */
-    
+     
     while(!stop)
     {
         tecla = getchar();
@@ -233,27 +232,192 @@ static void prvTask_getChar(void *pvParameters)
     exit(0);
     vTaskDelete(NULL);
 }
-static void prvTask_MorseLED(void *pvParameters)         // Task do LED piscando de acordo com a mensagem em Morse
+static void prvTask_Frase(void *pvParameters)         // Task 2  para enfileirar as teclas digitadas
 {
     // pvParameters contains LED params
     st_led_param_t *led = (st_led_param_t *)pvParameters;
     portTickType xLastWakeTime = xTaskGetTickCount();
-    char simbolo;
+    char Tecla;
+    
+    for (;;)
+    {
+        
+    if (xQueueReceive(TeclaQueue, simbolo, 0 )) ==pdpass
+        {
+            switch(Tecla)
+            {
+                case KEY_ESC
+                stop = 1;
+                break;
+                case KEY_ENTER
+                vTaskResume(Frase_hdlr);
+                break;
+                case 'a'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'b'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'c'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'd'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'e'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'f'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'g'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'h'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'i'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'j'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'k'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'l'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'm'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'n'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'o'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'p'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'q'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'r'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 's'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 't'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'u'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'v'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'w'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'x'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'y'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'z'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'A'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'B'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'C'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'D'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'E'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'F'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'G'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'H'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'I'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'J'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'K'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'L'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'M'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'N'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'O'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'P'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'Q'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'R'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'S'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'T'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'U'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'V'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'W'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'X'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'Y'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case 'Z'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '1'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '2'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '3'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '4'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '5'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '6'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '7'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '8'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '9'
+                xQueueSend(FraseQueue, Tecla, 0)
+                case '0'
+                xQueueSend(FraseQueue, Tecla, 0)
+                break;
+                }
+
+    vTaskDelete(NULL);
+}
+static void prvTask_Frase(void *pvParameters)         // Task 3 para decodificar as teclas em simbolos morse
+{
+   
+   char simbolo;
+
+   while(xQueueReceive(FraseQueue, &simbolo, 0) == pdPASS)
+    {
+        if(simbolo =! 0)
+        // Não consegui bolar um codigo em C para transformar a string de caracteres em simbolos Morse
+        // Pensei em usar algum comando que envolvesse strcpy.
+
+    }
+xQueueSend(MorseQueue, simbolo, 0)
+    vTaskDelete(NULL);
+}
+
+static void prvTask_MorseLED(void *pvParameters)         // Task 4 - LED piscando de acordo com a mensagem em Morse
+{
+    // pvParameters contains LED params
+    st_led_param_t *led = (st_led_param_t *)pvParameters;
+    portTickType xLastWakeTime = xTaskGetTickCount();
+    char simbolo_morse;
     int aceso;
 
     
     for (;;)
     {
-        if (xQueueReceive(MorseQueue, simbolo, 0 )) ==pdpass
+        if (xQueueReceive(MorseQueue, simbolo_morse, 0 )) ==pdpass
         {
-            if (simbolo = '-')
+            if (simbolo_morse = '-')
             aceso = 500;
             else
-            if (simbolo = '.')
+            if (simbolo_morse = '.')
             aceso = 250;
         // console_print("@");
         gotoxy(6, 2);
-        printf("%s⬤", GREEN);
+        printf("%s⬤", led->color);
         fflush(stdout);
         vTaskDelay(aceso / portTICK_PERIOD_MS);
         // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
@@ -267,76 +431,7 @@ static void prvTask_MorseLED(void *pvParameters)         // Task do LED piscando
 
     vTaskDelete(NULL);
 }
-static void prvTask_Frase(void *pvParameters)         // Task para enfileirar as teclas digitadas
-{
-    // pvParameters contains LED params
-    st_led_param_t *led = (st_led_param_t *)pvParameters;
-    portTickType xLastWakeTime = xTaskGetTickCount();
-    for (;;)
-    {
-        // console_print("@");
-        gotoxy(led->pos, 2);
-        printf("%s⬤", RED);
-        fflush(stdout);
-        vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
-        // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
 
-        gotoxy(led->pos, 2);
-        printf("%s ", BLACK);
-        fflush(stdout);
-        // vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
-        // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
-    }
-
-    vTaskDelete(NULL);
-}
-static void prvTask_Frase(void *pvParameters)         // Task para decodificar as teclas em simbolos morse
-{
-    // pvParameters contains LED params
-    st_led_param_t *led = (st_led_param_t *)pvParameters;
-    portTickType xLastWakeTime = xTaskGetTickCount();
-    for (;;)
-    {
-        // console_print("@");
-        gotoxy(led->pos, 2);
-        printf("%s⬤", RED);
-        fflush(stdout);
-        vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
-        // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
-
-        gotoxy(led->pos, 2);
-        printf("%s ", BLACK);
-        fflush(stdout);
-        // vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
-        // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
-    }
-
-    vTaskDelete(NULL);
-}
-
-static void prvTask_Decode(void *pvParameters)         // Task para decodificar as teclas em simbolos morse
-{
-    // pvParameters contains LED params
-    st_led_param_t *led = (st_led_param_t *)pvParameters;
-    portTickType xLastWakeTime = xTaskGetTickCount();
-    for (;;)
-    {
-        // console_print("@");
-        gotoxy(led->pos, 2);
-        printf("%s⬤", RED);
-        fflush(stdout);
-        vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
-        // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
-
-        gotoxy(led->pos, 2);
-        printf("%s ", BLACK);
-        fflush(stdout);
-        // vTaskDelay(led->period_ms / portTICK_PERIOD_MS);
-        // vTaskDelayUntil(&xLastWakeTime, led->period_ms / portTICK_PERIOD_MS);
-    }
-
-    vTaskDelete(NULL);
-}
 void app_run(void)
 {
     TeclaQueue = xQueueCreate (200, 0)
